@@ -11,8 +11,8 @@ import numerics as nums
 
 def main():
     # Parameter für beliebig viele Autos
-    num_of_cars = 1
-    car_position = np.zeros(num_of_cars)
+    num_of_cars = 2
+    car_position = np.arange(num_of_cars)
     car_velocity = np.zeros(num_of_cars)
     
     #Parameter für das intelligent-driver-model
@@ -32,7 +32,7 @@ def main():
       
     for i in range(Zeitschritt): 
         Delta_v,s = car.Abstand(car_position,car_velocity,num_of_cars)
-        car_position,car_velocity = nums.rk4(car_position,car_velocity,car.intellegent_driver_model(car_velocity,v_0,s,s_0,delta,Delta_v,T,a,b),car.Ort(car_velocity),h,num_of_cars)                                  
+        car_position,car_velocity = nums.rk4(car_position,car_velocity,car.intellegent_driver_model(car_velocity,v_0,s,s_0,delta,Delta_v,T,a,b),car.Ort(car_velocity),h,num_of_cars,v_0,s,s_0,delta,Delta_v,T,a,b)                                  
         visualization(Zeitschritt,car_position)      
     return 0
 

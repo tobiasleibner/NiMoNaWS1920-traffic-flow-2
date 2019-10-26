@@ -6,8 +6,11 @@ def Ort(v):
 
 def intellegent_driver_model(v,v_0,s,s_0,delta,Delta_v,T,a,b): 
     
-    s_star = s_0 + np.max(0,v*T + (v*Delta_v)/(2*(a*b)**0.5))  
-    driver = a*(1 - (v/v_0)**delta - (s_star(v,Delta_v)/s)**2)  
+    maximum = v*T + (v*Delta_v)/(2*(a*b)**0.5)
+    maximum[maximum < 0] = 0
+    s_star = s_0 + maximum
+    
+    driver = a*(1 - (v/v_0)**delta - (s_star/s)**2)  
     
     return driver
 
