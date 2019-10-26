@@ -11,15 +11,22 @@ tau = 1
 b = [0,1/2,1/2,1]
 c = [0,1/6,1/3,1/3,1/6]
 
-def rk4(h,value): 
-    k = np.zeros(5)
-    for i in range(4):
-        k[i+1] = f(value + h * b[i]*k[i])
-    for j in range(1,5):
-        value = value +h *c[j] *k[j]
-    return value
+def rk4(h,value,func,add_args): 
+    num_eq = value.shape[0]
+    k = np.zeros([num_eq,5])
+    arg = [[None] * num_eq]*2
+    for i_arg in range(num_eq):
+        arg[i_arg].append(add_args[i_arg])
 
-def f(v):
-    func_value = (v_opt - v)/tau
-    return func_value
+    for i in range(4):
+        for i_arg in range(num_eq):
+            arg[i_arg][0:num_eq] = value[i_arg] + h * b[i]*k[i_arg][i]
+
+        for n in range(num_eq):
+            k[n][i+1] = func[n](*arg)
+
+    for i in range(num_eq):
+        for j in range(1,5):
+            value[i] = value[i] + h *c[j] *k[i][j]
+    return value
 
