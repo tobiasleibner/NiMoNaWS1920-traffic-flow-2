@@ -12,8 +12,8 @@ b = [0,1/2,1/2,1]
 c = [0,1/6,1/3,1/3,1/6]
 
 def rk4(h,value,func,add_args): 
-    num_eq,num_cars = value.shape
-    k = np.zeros([5,num_eq,num_cars])
+    num_eq,num_dimension = value.shape
+    k = np.zeros([5,num_eq,num_dimension])
     arg = [None] * num_eq
     for i_arg in range(num_eq):
         arg[i_arg] = [None] * num_eq + add_args[i_arg]

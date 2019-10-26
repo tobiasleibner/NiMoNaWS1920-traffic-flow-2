@@ -34,7 +34,7 @@ class intellgentDriver:
 def calcdistant(cars_position,lenght):
     last_element = cars_position[0] - cars_position[-1]
     dist = np.append(np.diff(cars_position),last_element)
-    dist[dist  < 0 ] = dist[dist < 0] + lenght # - 2*cars_position[np.roll(dist<0,1)]
+    dist[dist  < 0 ] = dist[dist < 0] + lenght
     return dist
 
 def calcVelocityDiff(cars_velocity):
