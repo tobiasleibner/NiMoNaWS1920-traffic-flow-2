@@ -24,15 +24,17 @@ class intellgentDriver:
         return cars_velocity
     def accelaration(self, cars_position, cars_velocity, L):
         return self.acc_const * ( 1 - ( cars_velocity / self.opt_velocity )**self.acc_coefficient 
-                                    - ( optimalDistant(cars_velocity) / calcdistant(cars_position, L ))**2 )
+                                    - ( self.optimalDistant(cars_velocity) / calcdistant(cars_position, L ))**2 )
     
     def optimalDistant(self, cars_velocity):
-        return self.opt_distant + np.max([0,cars_velocity * self.follow_time + cars_velocity * calcVelocityDiff(cars_velocity) / (2 * np.sqrt(self.acc_const * self.acc_delay))])
+        positiv = cars_velocity * self.follow_time + cars_velocity * calcVelocityDiff(cars_velocity) / (2 * np.sqrt(self.acc_const * self.acc_delay))
+        positiv[positiv < 0] = 0
+        return self.opt_distant + positiv
 
 def calcdistant(cars_position,lenght):
     last_element = cars_position[0] - cars_position[-1]
     dist = np.append(np.diff(cars_position),last_element)
-    dist[dist  < 0 ] = dist[dist < 0] + lenght - 2*cars_position[np.roll(dist<0,1)]
+    dist[dist  < 0 ] = dist[dist < 0] + lenght # - 2*cars_position[np.roll(dist<0,1)]
     return dist
 
 def calcVelocityDiff(cars_velocity):
