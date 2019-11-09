@@ -23,9 +23,21 @@ class intellgentDriver:
     def velocity(self, cars_position, cars_velocity):
         return cars_velocity
     def accelaration(self, cars_position, cars_velocity, L):
+        return self.idm(cars_position, cars_velocity, L)
+    
+    def iidm(self, cars_position, cars_velocity, L):
+        z = self.optimalDistant(cars_velocity) / calcdistant(cars_position, L )
+        result = np.empty(len(z))
+        limit_idm = self.acc_const * ( 1 - ( cars_velocity / self.opt_velocity )**self.acc_coefficient)
+        result[z >= 1] = self.acc_const * (1-z[z >= 1]**2)
+        result[z < 1] = limit_idm[z < 1] * (1-z[z < 1]**(2*self.acc_coefficient/limit_idm[z < 1]))
+
+        return  result
+
+    def idm(self, cars_position, cars_velocity, L):
         return self.acc_const * ( 1 - ( cars_velocity / self.opt_velocity )**self.acc_coefficient 
                                     - ( self.optimalDistant(cars_velocity) / calcdistant(cars_position, L ))**2 )
-    
+
     def optimalDistant(self, cars_velocity):
         positiv = cars_velocity * self.follow_time + cars_velocity * calcVelocityDiff(cars_velocity) / (2 * np.sqrt(self.acc_const * self.acc_delay))
         positiv[positiv < 0] = 0
@@ -42,3 +54,4 @@ def calcVelocityDiff(cars_velocity):
     diff = np.append(np.diff(cars_velocity),last_element)
     diff = np.abs(diff)
     return diff
+
