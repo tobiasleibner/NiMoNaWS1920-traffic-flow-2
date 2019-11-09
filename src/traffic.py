@@ -10,80 +10,58 @@ import numerics as nums
 
 # Parameters 
 # System
-num_of_cars = np.array([3,4,3])
+cars_per_lane = np.array([3,4,3])
 street_length = 1000
 lanes = 3
 h = 0.1
+time_steps = 10000;
 
 def main():
-    c = car.intellgentDriver(2, 120 / 3.6, 4, 1, 1.5, 1, street_length)
-    traffic_position = np.array([np.linspace(100,street_length -500,num_of_cars[0]),
-                                 np.linspace(100,street_length -500,num_of_cars[1]),
-                                 np.linspace(100,street_length -500,num_of_cars[2])])
-    traffic_velocity = []
-    for i in range(lanes):
-        traffic_velocity.append(np.zeros(num_of_cars[i]) + 120 / 3.6)
-    traffic_velocity = np.array(traffic_velocity)
+    traffic_position = np.linspace(100,street_length -500,cars_per_lane[0])
+    for i in range(1,lanes):
+        traffic_position = np.concatenate((traffic_position,np.linspace(100 ,
+            street_length - 500, cars_per_lane[i])), axis=None)
     
-    traffic = np.array([traffic_position,traffic_velocity])
-    time_steps = 10000;
+    traffic = np.empty(sum(cars_per_lane),dtype=object)
+    lane_of_car = transformLines(cars_per_lane)
+    surrounding = calcSurrounding(traffic_position,cars_per_lane)
+    for i in range(traffic.size):
+        traffic[i] = car.intellgentDriver(traffic_position[i], 120/3.6, 
+            lane_of_car[i], 2, 120 / 3.6, 4, 1, 1.5, 1, street_length, surrounding[i])
+
     plt.ion()
     plt.show()
-    visualization(traffic[0])
+    visualization(np.array([ x.position for x in traffic]),np.array([ x.lane for x in traffic]))
     for i in range(time_steps):
-        traffic = nums.rk4(h, traffic,[ c.velocity,c.accelaration],[[],[]])
-        traffic[0] = traffic[0] % street_length;
+        traffic = nums.rk4(h, traffic)
+        for x in traffic:
+             x.position = x.position % street_length
         if i%3 == 0:
-            visualization(traffic[0])
+            visualization(np.array([ x.position for x in traffic]),np.array([ x.lane for x in traffic]))
     return 0
-    
-def visualization(pos):
+
+def transformLines(cars_per_lane):
+    result = np.zeros(int(cars_per_lane[0]))
+    for i in range(1,cars_per_lane.shape[0]):
+        result = np.concatenate((result,np.ones(int(cars_per_lane[i]))*i))
+    return result
+
+def visualization(pos,lanes):
     plt.cla()
     plt.xlim(0,1000)
-    plt.scatter(pos,np.ones(len(pos))) 
+    plt.scatter(pos,lanes) 
     plt.draw()
-    plt.pause(1e-6)
+    plt.pause(0.01)
     
-def calcSurrounding(traffic_position):
-    surrounding = []
-    for i in range(traffic_position.shape[0]):
-        surrounding.append([])
-        for k in range(len(traffic_position[i])):
-             surrounding[i].append(np.zeros(7))
-             surrounding[i][k][0] = k
-             surrounding[i][k][1] = (k+1) % len(traffic_position[i])
-             surrounding[i][k][2] = (k-1) % len(traffic_position[i])
-             
-             if i == 0:
-                surrounding[i][k][3] = -1
-                surrounding[i][k][4] = -1             
-             else:
-                 Abstand = traffic_position[i][k] - traffic_position[i-1][0]
-                 for l in range(len(traffic_position[i-1])): 
-                     if traffic_position[i][k] - traffic_position[i-1][l] < 0 and traffic_position[i][k] - traffic_position[i-1][l] >= Abstand:
-                         Abstand = traffic_position[i][k] - traffic_position[i-1][l]
-                         front = l
-                         back = l-1
-                     else:
-                         front = 0
-                         back = len(traffic_position[i-1])
-                 surrounding[i][k][3] = front
-                 surrounding[i][k][4] = back
-                 
-             if i == traffic_position.shape[0] - 1:
-                surrounding[i][k][5] = -1
-                surrounding[i][k][6] = -1             
-             else:
-                 Abstand = traffic_position[i][k] - traffic_position[i+1][0]
-                 for l in range(len(traffic_position[i+1])): 
-                     if traffic_position[i][k] - traffic_position[i+1][l] < 0 and traffic_position[i][k] - traffic_position[i+1][l] >= Abstand:
-                         Abstand = traffic_position[i][k] - traffic_position[i+1][l]
-                         front = l
-                         back = l-1
-                     else:
-                         front = 0
-                         back = len(traffic_position[i-1])
-                 surrounding[i][k][5] = front
-                 surrounding[i][k][6] = back
+def calcSurrounding(traffic_position,cars_per_lane):
+    surrounding = np.zeros([traffic_position.size,7],dtype = int)
+    cars_offset = 0
+    for i in range(cars_per_lane.shape[0]):
+        for k in range(cars_per_lane[i]):
+            surrounding[k + cars_offset][0] = k + cars_offset
+            surrounding[k + cars_offset][1] = (k + 1) % cars_per_lane[i] + cars_offset
+            surrounding[k + cars_offset][2] = (k - 1) % cars_per_lane[i] + cars_offset
+        cars_offset = cars_offset + cars_per_lane[i]
     return surrounding
+
 main()

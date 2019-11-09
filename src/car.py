@@ -7,7 +7,11 @@ import numpy as np
 from scipy.ndimage.interpolation import shift
 
 class intellgentDriver:
-    def __init__(self, opt_distant,
+    def __init__(self,
+            start_position,
+            start_velocity,
+            lane,
+            opt_distant,
             opt_velocity   ,
             acc_coefficient,
             accelleration   ,
@@ -15,64 +19,43 @@ class intellgentDriver:
             follow_time     ,
             street_length   ,
             surrounding):
-       self.opt_distant     = opt_distant     
-       self.opt_velocity    = opt_velocity    
-       self.acc_coefficient = acc_coefficient 
-       self.acc_const       = accelleration   
-       self.acc_delay       = acc_delay       
-       self.follow_time     = follow_time  
-       self.street_length   = street_length 
-       self.surrounding     = surrounding
+        self.speed           = start_velocity
+        self.position        = start_position
+        self.lane            = lane
+        self.opt_distant     = opt_distant     
+        self.opt_velocity    = opt_velocity    
+        self.acc_coefficient = acc_coefficient 
+        self.acc_const       = accelleration   
+        self.acc_delay       = acc_delay       
+        self.follow_time     = follow_time  
+        self.street_length   = street_length 
+        self.surrounding     = surrounding
        
-    def velocity(self, cars_position, cars_velocity):
-        return cars_velocity
-    def accelaration(self, cars_position, cars_velocity):
-        return self.idm(cars_position, cars_velocity)
+    def velocity(self, traffic,pos,vel):
+        return vel
+
+    def accelaration(self, traffic,pos,vel):
+        return self.idm(traffic)
     
-    def iidm(self, cars_position, cars_velocity):
-        z = self.optimalDistant(cars_velocity) / calcdistant(cars_position, self.street_length)
-        result = np.empty(len(z))
-        limit_idm = self.acc_const * ( 1 - ( cars_velocity / self.opt_velocity )**self.acc_coefficient)
-        result[z >= 1] = self.acc_const * (1-z[z >= 1]**2)
-        result[z < 1] = limit_idm[z < 1] * (1-z[z < 1]**(2*self.acc_coefficient/limit_idm[z < 1]))
+    def iidm(self, traffic):
+        z = self.optimalDistant(traffic) / self.calcdistant(traffic)
+        limit_idm = self.acc_const * ( 1 - ( self.speed / self.opt_velocity )**self.acc_coefficient)
+        if z >= 1: 
+            return self.acc_const * (1-z**2)
+        return limit_idm * (1-z**(2*self.acc_coefficient/limit_idm))
 
-        return  result
+    def idm(self, traffic):
+        return self.acc_const * ( 1 - ( self.speed / self.opt_velocity )**self.acc_coefficient 
+                                    - ( self.optimalDistant(traffic) / self.calcdistant(traffic))**2 )
 
-    def idm(self, cars_position, cars_velocity):
-        return self.acc_const * ( 1 - ( cars_velocity / self.opt_velocity )**self.acc_coefficient 
-                                    - ( self.optimalDistant(cars_velocity) / calcdistant(cars_position, self.street_length ))**2 )
-
-    def optimalDistant(self, cars_velocity):
-        positiv = cars_velocity * self.follow_time + cars_velocity * calcVelocityDiff(cars_velocity) / (2 * np.sqrt(self.acc_const * self.acc_delay))
-        positiv[positiv < 0] = 0
+    def optimalDistant(self, traffic):
+        positiv = self.speed * self.follow_time + self.speed * self.calcVelocityDiff(traffic) / (2 * np.sqrt(self.acc_const * self.acc_delay))
+        if positiv < 0: 
+           return  self.opt_distant
         return self.opt_distant + positiv
 
-    def calcdistant(self, cars_position):
-        last_element = cars_position[0] - cars_position[-1]
-        dist = np.append(np.diff(cars_position),last_element)
-        dist[dist  < 0 ] = dist[dist < 0] + lenght
-        return dist
+    def calcdistant(self, traffic):
+        return abs(self.position - traffic[self.surrounding[1]].position) % self.street_length
 
-def calcVelocityDiff(cars_velocity):
-    last_element = cars_velocity[0] - cars_velocity[-1]
-    diff = np.append(np.diff(cars_velocity),last_element)
-    diff = np.abs(diff)
-    return diff
-
-class car:
-    def __init__(self, opt_distant,
-            opt_velocity   ,
-            acc_coefficient,
-            accelleration   ,
-            acc_delay       ,
-            follow_time     ,
-            street_length   ,
-            surrounding):
-       self.opt_distant     = opt_distant     
-       self.opt_velocity    = opt_velocity    
-       self.acc_coefficient = acc_coefficient 
-       self.acc_const       = accelleration   
-       self.acc_delay       = acc_delay       
-       self.follow_time     = follow_time  
-       self.street_length   = street_length 
-       self.surrounding     = surrounding
+    def calcVelocityDiff(self, traffic):
+        return self.speed - traffic[int(self.surrounding[1])].speed-
