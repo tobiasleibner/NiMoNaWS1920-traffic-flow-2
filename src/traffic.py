@@ -24,7 +24,10 @@ class trafficSpace():
         self.surrounding = self.calcSurrounding(position,cars_per_lane)
         self.driver      = driver
         self.size        = position.size
-
+    
+    #              
+    # car_loc = [car itself,same line, line - 1, line + 1]
+    # 
     def calcSurrounding(self,traffic_position,cars_per_lane):
         surrounding = np.zeros([traffic_position.size,7],dtype = int)
         cars_offset = 0
@@ -34,6 +37,17 @@ class trafficSpace():
                 surrounding[k + cars_offset][1] = (k + 1) % cars_per_lane[i] + cars_offset
                 surrounding[k + cars_offset][2] = (k - 1) % cars_per_lane[i] + cars_offset
             cars_offset = cars_offset + cars_per_lane[i]
+        
+        #cars_offset = 0
+        #back = 0;
+        #for i in range(cars_per_lane.shape[0]):
+        #    for k in range(cars_per_lane[i]):
+        #        while (traffic_position[i][k] > traffic_position[i+1][back]):
+        #            if(back == cars_per_lane[i+1]):
+        #                back = back + 1
+        #            surrounding[k + cars_offset + cars_per_lane[i]][4] = k + cars_offset
+        #        surrounding[k + cars_offset][5] = back + cars_offset + cars_per_lane[i]
+                
         return surrounding
 
     def transformLines(self,cars_per_lane):
