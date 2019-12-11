@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import car
 import numerics as nums
+import display
 
 # Parameters 
 # System
@@ -55,26 +56,14 @@ def main():
 
     traffic = trafficSpace(traffic_position,120/3.6,cars_per_lane,driver)
 
-    
-    plt.ion()
-    plt.show()
-    visualization(traffic.position,traffic.lanes)
+    visualization = display.display(driver.size,traffic_position)
+
+
     for i in range(time_steps):
         traffic = nums.rk4(h, traffic)
         traffic.position = traffic.position % street_length
         if i%3 == 0:
-            visualization(traffic.position,traffic.lanes)
+            visualization.update(traffic.position)
     return 0
-
-
-
-def visualization(pos,lanes):
-    plt.cla()
-    plt.xlim(0,1000)
-    plt.scatter(pos,lanes) 
-    plt.draw()
-    plt.pause(0.01)
-    
-
 
 main()
